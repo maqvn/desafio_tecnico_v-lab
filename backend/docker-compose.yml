@@ -5,14 +5,14 @@ services:
     restart: unless-stopped
     
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: coursesphere_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
     
     ports:
       - "5432:5432"
     volumes:
-      - ./backend/src/config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./src/config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
       - course_sphere_db_data:/var/lib/postgresql/data
 
 volumes:
