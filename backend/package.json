@@ -1,1 +1,26 @@
-"type": "module"
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "node src/server.js",
+
+    "db:us": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, email FROM users;'",
+    "db:co": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, creator_id FROM courses;'",
+    "db:le": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, title, status, course_id FROM lessons;'"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.20.0"
+  }
+}
