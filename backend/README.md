@@ -1,4 +1,4 @@
-# CourseSphere API — Documentação Oficial
+# CourseSphere API — Documentação
 
 Backend desenvolvido para o Desafio Técnico Full Stack da V-LAB.
 
