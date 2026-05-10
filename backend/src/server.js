@@ -1,11 +1,10 @@
-const express = require('express');
-const cors = require('cors');
+import express from 'express';
+import cors from 'cors';
+import 'dotenv/config';
 
-require('dotenv').config();
-
-const authRoutes = require('./routes/auth.routes');
-const courseRoutes = require('./routes/course.routes');
-const lessonsRoutes = require('./routes/lesson.routes');
+import authRoutes from './routes/auth.routes.js';
+import courseRoutes from './routes/courses.routes.js';
+import lessonsRoutes from './routes/lessons.routes.js';
 
 const app = express();
 
@@ -13,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/lessons', lessonsRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
