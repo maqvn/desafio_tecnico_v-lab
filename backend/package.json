@@ -6,7 +6,11 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node src/server.js"
+    "dev": "node src/server.js",
+
+    "db:us": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, email FROM users;'",
+    "db:co": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, creator_id FROM courses;'",
+    "db:le": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, title, status, course_id FROM lessons;'"
   },
   "keywords": [],
   "author": "",
