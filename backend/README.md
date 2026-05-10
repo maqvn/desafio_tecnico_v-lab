@@ -412,8 +412,6 @@ Retorna os dados da aula
 
 Retorna um array de aulas.
 
-### 💡 Motivações para as decisões de arquitetura
-
 #### Erros
 
 - Se o ID do curso não existir no banco, a API retorna:
