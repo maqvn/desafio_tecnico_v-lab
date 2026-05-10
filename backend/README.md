@@ -373,8 +373,8 @@ Se o curso não pertencer ao usuário autenticado, a criação da aula é bloque
 | Campo | Valor |
 |---|---|
 | Método | `GET` |
-| Rota | `/lessons/course/:courseId` |
-| Exemplo | `/lessons/course/11` |
+| Rota | `/lessons/:courseId` |
+| Exemplo | `/lessons/11` |
 | Autenticação | Obrigatória `Bearer Token` |
 
 ### Resposta de sucesso
