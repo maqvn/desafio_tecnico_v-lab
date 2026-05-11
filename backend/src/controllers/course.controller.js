@@ -8,7 +8,8 @@ import {
 
 export const listCourses = async (request, response) => {
   try {
-    const courses = await getAllCourses();
+    const { search } = request.query;
+    const courses = await getAllCourses(search);
     return response.status(200).json(courses);
 
   } catch (error) {

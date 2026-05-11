@@ -412,7 +412,7 @@ Retorna os dados da aula
 
 Retorna um array de aulas.
 
-### 💡 Motivações para as decisões de arquitetura
+> **Observação:** Se o usuário não for o criador do curso, o array retornado contém apenas as aulas 'published'
 
 #### Erros
 
