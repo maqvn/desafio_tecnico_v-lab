@@ -8,9 +8,7 @@
     "test": "node --experimental-vm-modules node_modules/.bin/jest --runInBand --forceExit",
     "test:watch": "node --experimental-vm-modules node_modules/.bin/jest --watch --runInBand",
     "dev": "node src/server.js",
-    "db:us": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, email FROM users;'",
-    "db:co": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, name, creator_id FROM courses;'",
-    "db:le": "docker exec -i course_sphere_db psql -U admin -d coursesphere_db -c 'SELECT id, title, status, course_id FROM lessons;'"
+    "seed": "node src/config/seed.js"
   },
   "keywords": [],
   "author": "",
