@@ -1,9 +1,19 @@
 import { pool } from '../config/database.js';
 
-export const getLessonsByCourse = async (courseId) => {
+export const getLessonsByCourseAuth = async (courseId) => {
   const query = `
     SELECT * FROM lessons 
     WHERE course_id = $1 
+    ORDER BY created_at ASC
+  `;
+  const result = await pool.query(query, [courseId]);
+  return result.rows;
+};
+
+export const getLessonsByCourseNotAuth = async (courseId) => {
+  const query = `
+    SELECT * FROM lessons 
+    WHERE course_id = $1 AND status = 'published' 
     ORDER BY created_at ASC
   `;
   const result = await pool.query(query, [courseId]);

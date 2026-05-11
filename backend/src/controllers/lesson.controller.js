@@ -1,5 +1,6 @@
 import {
-  getLessonsByCourse,
+  getLessonsByCourseAuth,
+  getLessonsByCourseNotAuth,
   findLessonById,
   insertLesson,
   modifyLesson,
@@ -38,17 +39,27 @@ export const getLessonById = async (request, response) => {
 export const listLessonsByCourse = async (request, response) => {
   try {
     const { courseId } = request.params;
+    const userId = request.userId;
     
     const course = await findCourseById(courseId);
     if (!course) {
         return response.status(404).json({ error: 'Curso não encontrado.' });
     }
-    
-    const lessons = await getLessonsByCourse(courseId);
 
+    let lessons;
+
+    if(course.creator_id !== userId) {
+      lessons = await getLessonsByCourseNotAuth(courseId);
+    }
+    else {
+      lessons = await getLessonsByCourseAuth(courseId);
+    }
+    
+    
     return response.status(200).json(lessons);
 
   } catch (error) {
+    console.log(error);
     return response.status(500).json({ error: 'Erro ao listar aulas.' });
   }
 };
