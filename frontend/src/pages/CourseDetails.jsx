@@ -106,6 +106,10 @@ export function CourseDetails() {
     }
   }
 
+  function handleCloseModal() {
+    setModalLesson(null);
+  }
+
   if (isLoading) return <div className="p-10 text-center text-gray-500">Carregando conteúdo...</div>;
 
   const isOwner = course?.creator_id === userId;
@@ -191,7 +195,8 @@ export function CourseDetails() {
         <LessonModal
           lesson={modalLesson}
           onSubmit={handleSubmitLesson}
-          onClose={setModalLesson}
+          onClose={handleCloseModal}         
+          onChange={setModalLesson}
         />
       )}
     </div>
