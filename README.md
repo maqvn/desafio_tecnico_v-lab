@@ -1,11 +1,16 @@
 # CourseSphere 🎓
 
-Plataforma de gestão de cursos e aulas online desenvolvida como desafio técnico Full Stack da **V-LAB UFPE**.
+<video src="./assets/demo.mp4" controls="controls" muted="muted" width="100%">
+</video>
+
+Plataforma colaborativa de gestão de cursos e aulas online — Desafio Técnico Full Stack da **V-LAB UFPE**.
 
 ![Backend](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?logo=nodedotjs)
-![Frontend](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-61DAFB?logo=react)
+![Frontend](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-61DAFB?logo=react)
 ![Database](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql)
 ![Auth](https://img.shields.io/badge/Auth-JWT-000000?logo=jsonwebtokens)
+![Tests](https://img.shields.io/badge/Testes-Jest%20%2B%20Vitest-C21325?logo=jest)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
 
 ---
 
@@ -14,8 +19,10 @@ Plataforma de gestão de cursos e aulas online desenvolvida como desafio técnic
 - [Visão Geral](#visão-geral)
 - [Arquitetura](#arquitetura)
 - [Funcionalidades](#funcionalidades)
-- [Stack](#stack)
+- [Diferenciais Implementados](#diferenciais-implementados)
+- [Stack Completa](#stack-completa)
 - [Como Rodar](#como-rodar)
+- [Usuário de Teste](#usuário-de-teste)
 - [Estrutura do Projeto](#estrutura-do-projeto)
 - [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [Testes](#testes)
@@ -57,38 +64,55 @@ O **CourseSphere** permite que usuários autenticados criem e gerenciem cursos e
 | Funcionalidade | Detalhe |
 |---|---|
 | ✅ Registro e Login | JWT stateless, senhas com bcrypt |
-| ✅ Listagem de cursos | Busca por nome (ILIKE, case-insensitive) |
+| ✅ Listagem de cursos | Busca por nome (ILIKE, case-insensitive) + paginação |
 | ✅ CRUD de cursos | Apenas o criador pode editar/excluir |
 | ✅ CRUD de aulas | Verificação de posse via curso pai |
 | ✅ Status de aulas | `draft` visível só para o dono; `published` para todos |
+| ✅ Filtro de aulas | Tabs Todas / Publicadas / Rascunho na tela de detalhes |
 | ✅ API Externa | Palestrante Convidado via RandomUser API |
 | ✅ Feedback visual | Toasts de sucesso/erro em todas as ações |
+| ✅ Skeleton loading | Placeholders animados durante carregamento |
 | ✅ Proteção de rotas | Redirecionamento para login sem token |
 
 ---
 
-## Stack
+## Diferenciais Implementados
+
+| Diferencial | Detalhes |
+|---|---|
+| 🐳 **Docker** | `docker-compose` sobe o PostgreSQL com schema automático |
+| 🧪 **Testes Backend** | Jest + Supertest — 3 suites cobrindo auth, CRUD e regras de posse |
+| 🧪 **Testes Frontend** | Vitest + React Testing Library — 3 suites de componente |
+| 🔐 **JWT robusto** | Token stateless com `bcrypt` nas senhas e verificação de posse server-side |
+| 📄 **Seed de dados** | Script `npm run seed` cria usuário demo + cursos e aulas de exemplo |
+| 🎨 **UX avançada** | Skeleton loading, toasts ricos (Sonner), filtros de status, paginação |
+
+---
+
+## Stack Completa
 
 ### Backend
 | Tecnologia | Uso |
 |---|---|
-| Node.js + Express | Servidor HTTP e roteamento |
-| PostgreSQL | Banco de dados relacional |
-| Docker | Container do banco de dados |
+| Node.js 18+ + Express 5 | Servidor HTTP e roteamento |
+| PostgreSQL 15 | Banco de dados relacional |
+| Docker Compose | Container do banco com schema automático |
 | JWT (jsonwebtoken) | Autenticação stateless |
 | bcrypt | Hash de senhas |
-| dotenv | Gerenciamento de variáveis de ambiente |
+| dotenv | Variáveis de ambiente |
+| Jest + Supertest | Testes de integração e request |
 
 ### Frontend
 | Tecnologia | Uso |
 |---|---|
-| React 19 | Biblioteca principal de UI |
+| React 19 | Biblioteca de UI |
 | React Router DOM v7 | Roteamento SPA |
 | Axios | Cliente HTTP com interceptor JWT |
-| Tailwind CSS | Estilização utilitária |
+| Tailwind CSS v3 | Estilização utilitária |
 | Sonner | Notificações toast |
 | Lucide React | Ícones SVG |
-| Vite | Bundler e dev server |
+| Vite 8 | Bundler e dev server |
+| Vitest + React Testing Library | Testes de componente |
 
 ---
 
@@ -102,34 +126,59 @@ git clone <url-do-repositorio>
 cd desafio_tecnico_v-lab
 ```
 
-### 2. Suba o banco de dados
+### 2. Backend — banco, dependências e servidor
 ```bash
 cd backend
-docker compose up -d
-```
 
-### 3. Configure e inicie o backend
-```bash
-# Ainda dentro de backend/
-cp .env.example .env    # Edite com suas configurações
+# Configure as variáveis de ambiente
+cp .env.example .env
+# Edite .env com suas configurações (ou mantenha os padrões para desenvolvimento local)
+
+# Instale as dependências
 npm install
-npm run migrate         # Cria as tabelas no PostgreSQL
-npm run dev             # API disponível em http://localhost:3000
+
+# Suba o PostgreSQL com Docker (schema criado automaticamente)
+docker compose up -d
+
+# Inicie o servidor
+npm run dev
+# API disponível em http://localhost:3000
 ```
 
-### 4. Configure e inicie o frontend
+> **Verificar o banco:** `docker exec -it course_sphere_db psql -U admin -d coursesphere_db`
+
+### 3. Frontend — dependências e servidor
 ```bash
 # Em outro terminal, da raiz do projeto
 cd frontend
-cp .env.example .env    # Edite com a URL da API
+
+cp .env.example .env   # VITE_API_URL=http://localhost:3000
 npm install
-npm run dev             # App disponível em http://localhost:5173
+npm run dev
+# App disponível em http://localhost:5173
 ```
 
-> Para verificar se o banco está funcionando, use:
-> ```bash
-> docker exec -it course_sphere_db psql -U admin -d coursesphere_db
-> ```
+### 4. (Opcional) Popular banco com dados demo
+```bash
+# Com o backend já rodando:
+cd backend
+npm run seed
+```
+
+---
+
+## Usuário de Teste
+
+Após executar o seed, o seguinte usuário estará disponível para login imediato:
+
+| Campo | Valor |
+|---|---|
+| **E-mail** | `demo@coursesphere.com` |
+| **Senha** | `demo1234` |
+
+Esse usuário possui 3 cursos e 8 aulas de exemplo (algumas `draft`, outras `published`).
+
+Caso prefira criar um usuário manualmente, utilize a tela de registro da aplicação ou a rota `POST /api/auth/register`.
 
 ---
 
@@ -137,30 +186,40 @@ npm run dev             # App disponível em http://localhost:5173
 
 ```
 desafio_tecnico_v-lab/
-├── backend/                   # API RESTful (Node.js + Express)
+├── backend/                     # API RESTful (Node.js + Express)
 │   ├── src/
-│   │   ├── controllers/       # Lógica de negócio por recurso
-│   │   ├── middlewares/       # authMiddleware (validação JWT)
-│   │   ├── models/            # Queries SQL por entidade
-│   │   ├── routes/            # Definição de rotas
-│   │   ├── config/            # Conexão com o banco
-│   │   └── server.js          # Ponto de entrada
-│   ├── docker-compose.yml     # Container PostgreSQL
+│   │   ├── __tests__/           # Testes Jest (auth, courses, lessons)
+│   │   ├── config/
+│   │   │   ├── database.js      # Pool de conexão PostgreSQL
+│   │   │   ├── schema.sql       # DDL executado pelo Docker na inicialização
+│   │   │   └── seed.js          # Script de dados demo
+│   │   ├── controllers/         # Lógica de negócio por recurso
+│   │   ├── middlewares/         # authMiddleware (validação JWT)
+│   │   ├── models/              # Queries SQL por entidade
+│   │   ├── routes/              # Definição de rotas
+│   │   ├── app.js               # Configuração do Express
+│   │   └── server.js            # Ponto de entrada
+│   ├── docker-compose.yml       # Container PostgreSQL
+│   ├── jest.config.js
 │   ├── .env.example
 │   └── package.json
 │
-├── frontend/                  # SPA (React + Vite)
+├── frontend/                    # SPA (React + Vite)
 │   ├── src/
-│   │   ├── components/        # Componentes reutilizáveis
-│   │   ├── pages/             # Uma página por rota
+│   │   ├── components/          # Componentes reutilizáveis
+│   │   │   └── __tests__/       # Testes Vitest (CourseCard, EmptyState, LessonModal)
+│   │   ├── pages/               # Uma página por rota
 │   │   ├── services/
-│   │   │   └── api.js         # Instância Axios + interceptor JWT
-│   │   ├── App.jsx            # Definição de rotas
+│   │   │   └── api.js           # Instância Axios + interceptor JWT
+│   │   ├── test/
+│   │   │   └── setup.js         # Configuração do Vitest + jest-dom
+│   │   ├── App.jsx              # Rotas + PrivateRoute
 │   │   └── main.jsx
 │   ├── .env.example
+│   ├── vite.config.js           # Configuração do Vite + Vitest
 │   └── package.json
 │
-└── README.md                  # Este arquivo
+└── README.md
 ```
 
 ---
@@ -171,17 +230,14 @@ desafio_tecnico_v-lab/
 
 ```env
 PORT=3000
-DATABASE_URL=postgresql://admin:admin@localhost:5432/coursesphere_db
+DB_USER=admin
+DB_HOST=localhost
+DB_NAME=coursesphere_db
+DB_PASS=admin
+DB_PORT=5432
 JWT_SECRET=sua_chave_secreta_aqui
 JWT_EXPIRES_IN=1d
 ```
-
-| Variável | Descrição |
-|---|---|
-| `PORT` | Porta do servidor Express |
-| `DATABASE_URL` | String de conexão PostgreSQL |
-| `JWT_SECRET` | Chave secreta para assinar os tokens JWT |
-| `JWT_EXPIRES_IN` | Tempo de expiração do token (padrão: `1d`) |
 
 ### Frontend (`frontend/.env`)
 
@@ -189,29 +245,31 @@ JWT_EXPIRES_IN=1d
 VITE_API_URL=http://localhost:3000
 ```
 
-| Variável | Descrição |
-|---|---|
-| `VITE_API_URL` | URL base da API backend |
-
 ---
 
 ## Testes
 
-### Backend
+### Backend (Jest + Supertest)
 ```bash
 cd backend
 npm test
 ```
 
-Testes de request cobrem autenticação (registro, login, validações) e regras de negócio (criação, edição e exclusão com verificação de posse).
+Os testes rodam contra o banco real (PostgreSQL deve estar rodando). Cobrem:
+- **`auth.test.js`** — registro, login, duplicidade de e-mail, campos obrigatórios
+- **`courses.test.js`** — autenticação de rotas, CRUD completo, busca por nome, regras de posse (403)
+- **`lessons.test.js`** — criação, filtro de visibilidade (dono vs. outros), atualização, exclusão, posse
 
-### Frontend
+### Frontend (Vitest + React Testing Library)
 ```bash
 cd frontend
 npm test
 ```
 
-Testes de componente com Vitest + React Testing Library cobrem `CourseCard`, `EmptyState` e `LessonModal`.
+Cobrem comportamento e renderização de componentes isolados:
+- **`CourseCard.test.jsx`** — renderização de nome/descrição, badge "Meu curso" por userId
+- **`EmptyState.test.jsx`** — renderização da mensagem de estado vazio
+- **`LessonModal.test.jsx`** — modo criar vs. editar (detecção por presença de `id`), pré-população de campos, callback de fechar
 
 ---
 

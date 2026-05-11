@@ -1,87 +1,34 @@
 # CourseSphere — Backend
 
-API RESTful desenvolvida para o Desafio Técnico Full Stack da V-LAB UFPE, responsável por gerenciar autenticação de usuários, cursos e aulas da plataforma CourseSphere.
+> Documentação específica da API RESTful. Para visão geral, setup completo e credenciais de teste, consulte o [README raiz](../README.md).
+
+API desenvolvida em Node.js + Express para o Desafio Técnico Full Stack da V-LAB UFPE.
 
 ---
 
 ## Sumário
 
 - [Visão Geral](#visão-geral)
-- [Stack e Dependências](#stack-e-dependências)
-- [Como Rodar](#como-rodar)
 - [Estrutura de Pastas](#estrutura-de-pastas)
-- [Variáveis de Ambiente](#variáveis-de-ambiente)
 - [Autenticação](#autenticação)
 - [Endpoints](#endpoints)
-  - [Usuários](#1-usuários)
-  - [Cursos](#2-cursos)
-  - [Aulas](#3-aulas)
+- [Modelos de Dados](#modelos-de-dados)
+- [Testes](#testes)
 - [Decisões Arquiteturais](#decisões-arquiteturais)
 
 ---
 
 ## Visão Geral
 
-O backend expõe uma API REST com as seguintes responsabilidades:
+**Base URL:** `http://localhost:3000/api`
 
-- Registro e autenticação de usuários via JWT
-- CRUD completo de cursos com regras de posse
+O backend expõe uma API REST com:
+- Registro e autenticação via JWT, senhas com `bcrypt`
+- CRUD completo de cursos com verificação de posse (`creator_id`)
 - CRUD completo de aulas com validações de status e URL
-- Proteção de rotas via middleware de autenticação
-- Busca de cursos por nome com suporte a correspondência parcial (ILIKE)
-
-**Base URL:**
-```
-http://localhost:3000/api
-```
-
----
-
-## Stack e Dependências
-
-| Tecnologia | Uso |
-|---|---|
-| Node.js + Express | Servidor HTTP e roteamento |
-| PostgreSQL | Banco de dados relacional |
-| Docker | Container do banco de dados |
-| JWT (jsonwebtoken) | Autenticação stateless |
-| bcrypt | Hash de senhas |
-| dotenv | Gerenciamento de variáveis de ambiente |
-
----
-
-## Como Rodar
-
-**Pré-requisitos:** Node.js 18+, npm e Docker instalados.
-
-```bash
-# 1. Entre na pasta do backend
-cd backend
-
-# 2. Instale as dependências
-npm install
-
-# 3. Configure as variáveis de ambiente
-cp .env.example .env
-
-# 4. Suba o banco de dados com Docker
-docker compose up -d
-
-# 5. Execute as migrations para criar as tabelas
-npm run migrate
-
-# 6. Inicie o servidor
-npm run dev
-```
-
-A API estará disponível em `http://localhost:3000`.
-
-**Acessar o terminal do PostgreSQL no container:**
-```bash
-docker exec -it course_sphere_db psql -U admin -d coursesphere_db
-```
-
-**Usuário de teste:** caso queira criar um usuário sem passar pelo registro, utilize a rota `POST /api/auth/register` com qualquer e-mail e senha. Não há seed obrigatório — o fluxo de registro está completamente implementado.
+- Proteção de rotas via `authMiddleware`
+- Busca de cursos por nome com `ILIKE` (case-insensitive)
+- Filtro automático de visibilidade: donos veem `draft` + `published`; outros apenas `published`
 
 ---
 
@@ -90,231 +37,112 @@ docker exec -it course_sphere_db psql -U admin -d coursesphere_db
 ```
 backend/
 ├── src/
-│   ├── controllers/        # Lógica de negócio de cada recurso
-│   │   ├── authController.js
-│   │   ├── courseController.js
-│   │   └── lessonController.js
+│   ├── __tests__/
+│   │   ├── auth.test.js        # Registro, login, validações
+│   │   ├── courses.test.js     # CRUD e regras de posse de cursos
+│   │   └── lessons.test.js     # CRUD e filtro de visibilidade de aulas
+│   ├── config/
+│   │   ├── database.js         # Pool de conexão (pg)
+│   │   ├── schema.sql          # DDL executado pelo Docker na inicialização
+│   │   └── seed.js             # Dados demo (usuário + cursos + aulas)
+│   ├── controllers/            # Lógica de negócio por recurso
 │   ├── middlewares/
-│   │   └── authMiddleware.js  # Validação do JWT em rotas protegidas
-│   ├── routes/             # Definição de rotas por recurso
-│   │   ├── authRoutes.js
-│   │   ├── courseRoutes.js
-│   │   └── lessonRoutes.js
-│   ├── database/
-│   │   └── migrations/     # Scripts de criação das tabelas
-│   └── server.js           # Ponto de entrada, configuração do Express
+│   │   └── auth.middleware.js  # Valida JWT e injeta userId no request
+│   ├── models/                 # Queries SQL por entidade
+│   ├── routes/                 # Definição de rotas
+│   ├── app.js                  # Express app (cors, json, rotas)
+│   └── server.js               # Ponto de entrada
 ├── docker-compose.yml
+├── jest.config.js
 ├── .env.example
 └── package.json
 ```
 
 ---
 
-## Variáveis de Ambiente
-
-Crie um arquivo `.env` na raiz do `backend/` com o seguinte conteúdo:
-
-```env
-PORT=3000
-DATABASE_URL=postgresql://admin:admin@localhost:5432/coursesphere_db
-JWT_SECRET=sua_chave_secreta_aqui
-JWT_EXPIRES_IN=1d
-```
-
-| Variável | Descrição |
-|---|---|
-| `PORT` | Porta em que o servidor irá rodar |
-| `DATABASE_URL` | String de conexão com o PostgreSQL |
-| `JWT_SECRET` | Chave secreta para assinar os tokens JWT |
-| `JWT_EXPIRES_IN` | Tempo de expiração do token (padrão: `1d`) |
-
----
-
 ## Autenticação
 
-A API utiliza **JWT (JSON Web Token)** para autenticação stateless. O token é gerado no login e deve ser enviado no header de todas as rotas protegidas:
+A API usa **JWT stateless**. Envie o token no header de todas as rotas protegidas:
 
 ```http
 Authorization: Bearer <seu_token_jwt_aqui>
 ```
 
-O token expira em **1 dia**, equilibrando segurança e usabilidade durante os testes. Todas as rotas protegidas passam pelo `authMiddleware`, que valida e decodifica o token antes de qualquer controller ser executado. O `id` do usuário autenticado fica disponível em `request.userId` para os controllers.
+O `authMiddleware` valida o token e injeta `request.userId`. O `creator_id` **nunca** é enviado pelo frontend — sempre extraído do token, impedindo adulteração.
 
 ---
 
 ## Endpoints
 
-### 1. Usuários
+### Usuários (sem autenticação)
 
-#### `POST /api/auth/register` — Registrar usuário
-
-Cria um novo usuário. A senha é armazenada como hash via `bcrypt` — nunca em texto puro.
-
-**Autenticação:** não necessária
-
-**Body:**
-```json
-{
-  "name": "Jose",
-  "email": "email@email.com",
-  "password": "senha123"
-}
-```
-
-**Resposta:** `201 Created` com os dados do usuário (sem a senha).
-
----
-
-#### `POST /api/auth/login` — Login
-
-Autentica o usuário e retorna o token de acesso.
-
-**Autenticação:** não necessária
-
-**Body:**
-```json
-{
-  "email": "email@email.com",
-  "password": "senha123"
-}
-```
-
-**Resposta:** `200 OK`
-```json
-{
-  "user": { "id": 1, "name": "Jose", "email": "email@email.com" },
-  "token": "eyJhbGciOiJIUzI1NiIs..."
-}
-```
-
----
-
-### 2. Cursos
-
-Todas as rotas de cursos exigem `Authorization: Bearer <token>`.
-
----
-
-#### `POST /api/courses` — Criar curso
-
-O `creator_id` é extraído do token JWT no backend — nunca enviado pelo frontend. Isso impede que um usuário crie um curso em nome de outro. A data `end_date` é validada via constraint SQL e não pode ser anterior a `start_date`.
-
-**Body:**
-```json
-{
-  "name": "Curso A",
-  "description": "texto descrição",
-  "start_date": "2025-01-01",
-  "end_date": "2026-01-01"
-}
-```
-
-**Resposta:** `201 Created`
-
----
-
-#### `GET /api/courses` — Listar cursos
-
-Retorna todos os cursos. Suporta busca parcial por nome via query string, utilizando o operador `ILIKE` do PostgreSQL (case-insensitive).
-
-**Query params opcionais:**
-
-| Param | Tipo | Descrição |
+| Método | Rota | Descrição |
 |---|---|---|
-| `search` | string | Filtro parcial pelo nome do curso |
+| `POST` | `/api/auth/register` | Cria usuário. Retorna `201` com dados (sem senha). Erros: `400` campos ausentes, `409` e-mail duplicado. |
+| `POST` | `/api/auth/login` | Autentica e retorna `{ user, token }`. Erros: `400` campos ausentes, `401` credenciais inválidas. |
 
-**Exemplo:** `GET /api/courses?search=logica`
+### Cursos (requer token)
 
-**Resposta:** `200 OK` com array de cursos.
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/courses` | Lista todos os cursos. Query `?search=termo` filtra por nome (ILIKE). |
+| `POST` | `/api/courses` | Cria curso. `creator_id` vem do token. Valida: nome ≥ 3 chars, `end_date ≥ start_date`. |
+| `GET` | `/api/courses/:id` | Retorna curso por ID. `404` se não encontrado. |
+| `PUT` | `/api/courses/:id` | Atualiza curso. `403` se não for o criador. |
+| `DELETE` | `/api/courses/:id` | Exclui curso (cascata nas aulas). `403` se não for o criador. |
 
----
+### Aulas (requer token)
 
-#### `GET /api/courses/:id` — Buscar curso por ID
-
-**Resposta:** `200 OK` com os dados do curso, ou `404 Not Found` se não existir.
-
----
-
-#### `PUT /api/courses/:id` — Atualizar curso
-
-Requer envio completo dos campos (`name`, `description`, `start_date`, `end_date`). Antes de atualizar, o controller verifica se o `creator_id` do curso coincide com o `userId` do token. Se não coincidir, retorna `403 Forbidden`.
-
-**Respostas:** `200 OK`, `403 Forbidden`, `404 Not Found`
-
----
-
-#### `DELETE /api/courses/:id` — Deletar curso
-
-Mesma verificação de posse do PUT. Apenas o criador pode deletar.
-
-**Respostas:** `204 No Content`, `403 Forbidden`
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/lessons/course/:courseId` | Lista aulas do curso. Dono vê `draft` + `published`; outros só `published`. |
+| `POST` | `/api/lessons` | Cria aula. Valida: `status` = `draft`/`published`, `video_url` se informado. `403` se não for dono do curso. |
+| `GET` | `/api/lessons/:id` | Retorna aula por ID. |
+| `PUT` | `/api/lessons/:id` | Atualiza aula. `403` se não for dono do curso pai. |
+| `DELETE` | `/api/lessons/:id` | Exclui aula. `403` se não for dono do curso pai. |
 
 ---
 
-### 3. Aulas
+## Modelos de Dados
 
-Todas as rotas de aulas exigem `Authorization: Bearer <token>`.
+```sql
+users     (id, name, email UNIQUE, password, created_at)
 
----
+courses   (id, name CHECK(length >= 3), description, start_date, end_date,
+           creator_id → users(id) CASCADE, created_at)
+          -- CHECK: end_date >= start_date
 
-#### `POST /api/lessons` — Criar aula
-
-Para criar uma aula, o sistema verifica a quem pertence o `course_id` informado. Se o curso não pertencer ao usuário autenticado, a criação é bloqueada com `403 Forbidden`. O campo `video_url` passa por validação de formato de URL no controller. O campo `status` aceita apenas os valores `draft` ou `published`.
-
-**Body:**
-```json
-{
-  "title": "Lógica Aristotélica",
-  "video_url": "https://www.youtube.com/watch?v=0PYLo6JC_ro",
-  "status": "published",
-  "course_id": 11
-}
+lessons   (id, title CHECK(length >= 3), status IN ('draft','published'),
+           video_url, course_id → courses(id) CASCADE, created_at)
 ```
 
-**Resposta:** `201 Created`
-
 ---
 
-#### `GET /api/lessons/:id` — Buscar aula por ID
+## Testes
 
-**Resposta:** `200 OK` com os dados da aula, ou `404 Not Found`.
+```bash
+# PostgreSQL deve estar rodando
+npm test
+```
 
----
+Jest + Supertest, executados em banda (`--runInBand`) para evitar condições de corrida.
 
-#### `GET /api/lessons/course/:courseId` — Listar aulas de um curso
-
-Retorna as aulas do curso informado. Se o usuário autenticado não for o criador do curso, apenas aulas com `status: "published"` são retornadas. Se o curso não existir, retorna `404 Not Found`. Se existir mas não tiver aulas, retorna `200 OK` com array vazio `[]`.
-
-**Resposta:** `200 OK` com array de aulas.
-
----
-
-#### `PUT /api/lessons/:id` — Atualizar aula
-
-Requer `title`, `video_url` e `status`. Verifica se o curso da aula pertence ao usuário autenticado antes de permitir a atualização.
-
-**Respostas:** `200 OK`, `403 Forbidden`
-
----
-
-#### `DELETE /api/lessons/:id` — Deletar aula
-
-Mesma verificação de posse via curso da aula.
-
-**Resposta:** `204 No Content`
+| Suite | Cobertura |
+|---|---|
+| `auth.test.js` | Registro (201), campos ausentes (400), e-mail duplicado (409), login com sucesso (200 + token), senha errada (401), e-mail inexistente (401) |
+| `courses.test.js` | Rotas sem token (401), CRUD completo, busca por nome, 404 para ID inexistente, 403 para não-dono, validação de datas e nome curto (400) |
+| `lessons.test.js` | Criação de aulas `published` e `draft`, filtro de visibilidade dono vs. outros, atualização, exclusão, 403 para acesso a curso alheio |
 
 ---
 
 ## Decisões Arquiteturais
 
-**JWT stateless** — O uso de JWT elimina a necessidade de armazenar sessões no servidor, facilitando escalabilidade. O token carrega o `userId` que é utilizado por todos os controllers para verificação de posse sem consultas extras ao banco.
+**JWT stateless** — Elimina sessões no servidor. O `userId` no payload é a única fonte de identidade para os controllers.
 
-**Verificação de posse no backend** — O `creator_id` nunca é enviado pelo frontend: é sempre extraído do token. Isso elimina qualquer possibilidade de um usuário manipular a propriedade de um recurso via body da requisição.
+**`creator_id` server-side** — Extraído do token, nunca do body. Impede criar recursos em nome de outro usuário via manipulação da requisição.
 
-**Segurança em cascata nas aulas** — A criação e edição de aulas verifica a posse do curso pai, não da aula diretamente. Isso centraliza a regra de autorização no recurso principal (curso) e evita inconsistências.
+**Posse via curso pai nas aulas** — Autorização verifica o `creator_id` do *curso*, não da aula. Centraliza a regra e evita inconsistências.
 
-**ILIKE para busca** — O operador `ILIKE` do PostgreSQL permite buscas parciais case-insensitive sem necessidade de bibliotecas externas, mantendo a simplicidade da query e o comportamento esperado pelo usuário.
+**ILIKE para busca** — Busca parcial case-insensitive nativa do PostgreSQL, sem dependências extras.
 
-**Paginação no frontend** — Os dados de cursos são enviados na íntegra e a paginação simulada é delegada ao React, reduzindo a complexidade das queries e o número de roundtrips ao banco para esse volume de dados.
-
-**`video_url` como string validada** — Vídeos não são armazenados como BLOB no banco por questões de performance. O campo recebe apenas a URL, que é validada no controller para garantir que seja uma URL real antes de persistir.
+**Schema via Docker** — `schema.sql` montado em `/docker-entrypoint-initdb.d/` é executado automaticamente na primeira inicialização, eliminando scripts de migração manuais.
