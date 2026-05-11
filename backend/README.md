@@ -412,6 +412,8 @@ Retorna os dados da aula
 
 Retorna um array de aulas.
 
+> **Observação:** Se o usuário não for o criador do curso, o array retornado contém apenas as aulas 'published'
+
 #### Erros
 
 - Se o ID do curso não existir no banco, a API retorna:
