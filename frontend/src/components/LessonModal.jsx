@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 
-export function LessonModal({ lesson, onSubmit, onClose }) {
+export function LessonModal({ lesson, onSubmit, onClose, onChange }) {
   const isEditing = Boolean(lesson?.id);
 
   return (
@@ -22,7 +22,7 @@ export function LessonModal({ lesson, onSubmit, onClose }) {
             placeholder="Título da aula"
             required
             value={lesson?.title ?? ''}
-            onChange={(e) => onClose({ ...lesson, title: e.target.value })}
+            onChange={(e) => onChange({ ...lesson, title: e.target.value })} 
             className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
@@ -30,12 +30,12 @@ export function LessonModal({ lesson, onSubmit, onClose }) {
             placeholder="URL do Vídeo (YouTube, etc)"
             required
             value={lesson?.video_url ?? ''}
-            onChange={(e) => onClose({ ...lesson, video_url: e.target.value })}
+            onChange={(e) => onChange({ ...lesson, video_url: e.target.value })}
             className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
           />
           <select
             value={lesson?.status ?? 'published'}
-            onChange={(e) => onClose({ ...lesson, status: e.target.value })}
+            onChange={(e) => onChange({ ...lesson, status: e.target.value })}
             className="w-full px-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="published">Publicada</option>
