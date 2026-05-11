@@ -1,6 +1,7 @@
 # CourseSphere 🎓
 
-
+<video src="./assets/demo.mp4" controls="controls" muted="muted" width="100%">
+</video>
 
 Plataforma colaborativa de gestão de cursos e aulas online — Desafio Técnico Full Stack da **V-LAB UFPE**.
 
