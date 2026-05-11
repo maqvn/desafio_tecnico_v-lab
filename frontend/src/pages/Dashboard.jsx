@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, BookOpen } from 'lucide-react';
+import { Plus, Search, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Navbar } from '../components/NavBar';
 import { CourseCard } from '../components/CourseCard';
 import { EmptyState } from '../components/EmptyState';
 import api from '../services/api';
+
+const PAGE_SIZE = 9;
 
 function SkeletonCard() {
   return (
@@ -22,6 +24,90 @@ function SkeletonCard() {
         <div className="h-3 bg-gray-200 rounded w-24" />
       </div>
     </div>
+  );
+}
+
+function Pagination({ currentPage, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  return (
+    <div className="flex items-center justify-center gap-2 mt-10" aria-label="Paginação">
+      {/* Botão Anterior */}
+      <button
+        id="btn-prev-page"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        aria-label="Página anterior"
+      >
+        <ChevronLeft size={16} />
+        Anterior
+      </button>
+
+      {/* Números de página */}
+      {pages.map((page) => (
+        <button
+          key={page}
+          id={`btn-page-${page}`}
+          onClick={() => onPageChange(page)}
+          aria-current={page === currentPage ? 'page' : undefined}
+          className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+            page === currentPage
+              ? 'bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-200'
+              : 'text-gray-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200'
+          }`}
+        >
+          {page}
+        </button>
+      ))}
+
+      {/* Botão Próximo */}
+      <button
+        id="btn-next-page"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        aria-label="Próxima página"
+      >
+        Próximo
+        <ChevronRight size={16} />
+      </button>
+    </div>
+  );
+}
+
+function CoursesWithPagination({ courses, userId }) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(courses.length / PAGE_SIZE);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const paginated = courses.slice(start, start + PAGE_SIZE);
+
+  function handlePageChange(page) {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {paginated.map(course => (
+          <CourseCard key={course.id} course={course} userId={userId} />
+        ))}
+      </div>
+
+      {/* Resumo */}
+      <div className="mt-6 text-center text-xs text-gray-400">
+        Exibindo {start + 1}–{Math.min(start + PAGE_SIZE, courses.length)} de {courses.length} curso{courses.length !== 1 ? 's' : ''}
+      </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+    </>
   );
 }
 
@@ -103,11 +189,7 @@ export function Dashboard() {
         ) : courses.length === 0 ? (
           <EmptyState message="Nenhum curso encontrado." />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map(course => (
-              <CourseCard key={course.id} course={course} userId={user?.id} />
-            ))}
-          </div>
+          <CoursesWithPagination courses={courses} userId={user?.id} />
         )}
 
       </main>

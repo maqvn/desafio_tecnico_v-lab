@@ -10,6 +10,12 @@ import api from '../services/api';
 
 const NEW_LESSON = { title: '', video_url: '', status: 'published' };
 
+const STATUS_FILTERS = [
+  { value: 'all', label: 'Todas' },
+  { value: 'published', label: 'Publicadas' },
+  { value: 'draft', label: 'Rascunho' },
+];
+
 export function CourseDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -20,6 +26,7 @@ export function CourseDetails() {
   const [userId, setUserId] = useState(null);
 
   const [modalLesson, setModalLesson] = useState(null);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const [guestInstructor, setGuestInstructor] = useState(null);
 
@@ -114,6 +121,11 @@ export function CourseDetails() {
 
   const isOwner = course?.creator_id === userId;
 
+  // Filtra aulas pelo status selecionado
+  const filteredLessons = statusFilter === 'all'
+    ? lessons
+    : lessons.filter(l => l.status === statusFilter);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       <PageHeader
@@ -161,10 +173,12 @@ export function CourseDetails() {
         </div>
 
         <div className="lg:col-span-2 space-y-6">
+          {/* Cabeçalho das aulas + botão nova aula */}
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-900">Aulas</h2>
             {isOwner && (
               <button
+                id="btn-add-lesson"
                 onClick={() => setModalLesson(NEW_LESSON)}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm"
               >
@@ -173,11 +187,49 @@ export function CourseDetails() {
             )}
           </div>
 
+          {/* Filtro de status */}
+          {lessons.length > 0 && (
+            <div
+              className="flex gap-2 p-1 bg-gray-100 rounded-xl w-fit"
+              role="group"
+              aria-label="Filtrar aulas por status"
+            >
+              {STATUS_FILTERS.map(({ value, label }) => (
+                <button
+                  key={value}
+                  id={`filter-${value}`}
+                  onClick={() => setStatusFilter(value)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                    statusFilter === value
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {label}
+                  <span className={`ml-1.5 text-xs font-semibold px-1.5 py-0.5 rounded-full ${
+                    statusFilter === value
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : 'bg-gray-200 text-gray-500'
+                  }`}>
+                    {value === 'all' ? lessons.length : lessons.filter(l => l.status === value).length}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Lista de aulas */}
           <div className="space-y-4">
-            {lessons.length === 0 ? (
-              <EmptyState message="Este curso ainda não possui aulas." />
+            {filteredLessons.length === 0 ? (
+              <EmptyState
+                message={
+                  statusFilter === 'all'
+                    ? 'Este curso ainda não possui aulas.'
+                    : `Nenhuma aula com status "${statusFilter === 'published' ? 'publicada' : 'rascunho'}".`
+                }
+              />
             ) : (
-              lessons.map(lesson => (
+              filteredLessons.map(lesson => (
                 <LessonItem
                   key={lesson.id}
                   lesson={lesson}
@@ -195,7 +247,7 @@ export function CourseDetails() {
         <LessonModal
           lesson={modalLesson}
           onSubmit={handleSubmitLesson}
-          onClose={handleCloseModal}         
+          onClose={handleCloseModal}
           onChange={setModalLesson}
         />
       )}
