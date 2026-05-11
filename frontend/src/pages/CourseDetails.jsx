@@ -17,12 +17,25 @@ export function CourseDetails() {
   const [newLessonUrl, setNewLessonUrl] = useState('');
   const [newLessonStatus, setNewLessonStatus] = useState('published');
   const [editingLesson, setEditingLesson] = useState(null);
+  const [guestInstructor, setGuestInstructor] = useState(null);
 
   useEffect(() => {
     const savedUser = localStorage.getItem('@CourseSphere:user');
     if (savedUser) setUserId(JSON.parse(savedUser).id);
     loadData();
+    fetchGuestInstructor();
   }, [id]);
+
+  async function fetchGuestInstructor() {
+    try {
+      const response = await fetch('https://randomuser.me/api/');
+      const data = await response.json();
+      setGuestInstructor(data.results[0]);
+      
+    } catch (error) {
+        console.error("Erro ao buscar instrutor externo:", error);
+      }
+    }
 
   async function loadData() {
     try {
@@ -132,17 +145,28 @@ export function CourseDetails() {
           <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Sobre o Curso</h2>
             <p className="text-gray-600 leading-relaxed mb-6">{course?.description}</p>
-            <div className="space-y-3 pt-4 border-t border-gray-100 text-sm text-gray-500">
-              <div className="flex justify-between">
-                <span>Início:</span>
-                <span className="font-medium text-gray-700">{new Date(course?.start_date).toLocaleDateString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Término:</span>
-                <span className="font-medium text-gray-700">{new Date(course?.end_date).toLocaleDateString()}</span>
+            </div>
+      
+            {guestInstructor && (
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <h2 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4">
+                  Palestrante Convidado
+                </h2>
+              <div className="flex flex-col items-center text-center">
+                <img
+                  src={guestInstructor.picture.large}
+                  className="w-20 h-20 rounded-full mb-3 border-2 border-blue-50 shadow-sm"
+                  alt="Instrutor"
+                />
+                <p className="font-bold text-gray-800">
+                  {guestInstructor.name.first} {guestInstructor.name.last}
+                </p>
+                <p className="text-xs text-gray-500 italic">
+                  Especialista Internacional ({guestInstructor.location.country})
+                </p>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="lg:col-span-2 space-y-6">
